@@ -18,15 +18,12 @@ const getCalendar = () => {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   let calendarTable = document.querySelector(".calendar-table__body");
 
+  document.querySelector(".error_msg").innerText = "";
+
   // first and last day in the current month
   const firstDayInMonth = new Date(year, monthNb, 1).toLocaleDateString(
     "en-us",
-    {
-      weekday: "short",
-      //   year: "numeric",
-      //   month: "numeric",
-      //   day: "numeric",
-    }
+    { weekday: "short" }
   );
   const lastDayInMonth = new Date(year, monthNb + 1, 0).getDate();
 
@@ -45,6 +42,16 @@ const getCalendar = () => {
     // days of current month
     if (i > prevInactiveDays) {
       calendarItemValue.innerText = i - prevInactiveDays;
+
+      // current event style : color the date already have an event with blue cercle
+      const eventDay = events.find(
+        (event) =>
+          event.date === `${monthNb + 1}/${i - prevInactiveDays}/${year}`
+      );
+      if (eventDay) {
+        calendarCol.classList.add("calendar-table__event");
+      }
+
       calendarCol.addEventListener("click", () =>
         displayAddEvent(`${monthNb + 1}/${i - prevInactiveDays}/${year}`)
       );
@@ -61,14 +68,9 @@ const getCalendar = () => {
       calendarItemValue.innerText = lastDayInMonth;
     } else {
       calendarCol.classList.add("calendar-table__inactive");
-      calendarItemValue.innerText = lastDayInMonth - i;
     }
-    //   calendarItemValue.innerText = lastDayInMonth-1
-
     calendarTable.appendChild(calendarCol);
-
   }
-  displayAllEvents()
 };
 
 /**************************** PREV & NEXT MONTH ******************************/
@@ -89,13 +91,15 @@ const prevNextButtons = () => {
 
 /***************************** EVENTS ***************************************/
 let clickedDay = null;
+let events = localStorage.getItem("events")
+  ? JSON.parse(localStorage.getItem("events"))
+  : [];
 let eventInput = document.querySelector(".event_input");
 let errorMsg = document.querySelector(".error_msg");
 // check if events is not empty else return emty array ( you don't need undefined)
-let events = localStorage.getItem("events")
-? JSON.parse(localStorage.getItem("events"))
-: [];
-console.log(events)
+// let events = localStorage.getItem("events")
+//   ? JSON.parse(localStorage.getItem("events"))
+//   : [];
 
 /*** HIDE ADD NEW EVENT BLOCK ***/
 const hideAddEvent = () => {
@@ -104,7 +108,8 @@ const hideAddEvent = () => {
   clickedDay = null;
   eventInput.classList.remove("error");
   errorMsg.innerText = "";
-  getCalendar();
+  displayAllEvents();
+  // getCalendar();
 };
 
 /*** DISPLAY ADD NEW EVENT BLOCK ***/
@@ -117,7 +122,6 @@ const displayAddEvent = (date) => {
     document.querySelector(".add_event").style.display = "flex";
     let t = document.querySelector(".calendar-table__col");
     t.classList.add("calendar-table__event");
-
   } else {
     errorMsg.innerText = "Event already exist at this day !!";
     //   alert("Event already exist !!");
@@ -128,14 +132,11 @@ const displayAddEvent = (date) => {
 const addNewEvent = () => {
   if (eventInput.value) {
     eventInput.classList.remove("error");
-    events.push({ date: clickedDay, eventTitle: eventInput.value });
-    localStorage.setItem('events', JSON.stringify(events))
-    // for (let j = 0; j < events.length; j++) {
-    //   localStorage.setItem(
-    //     `Event of ${events[j].date}`,
-    //     JSON.stringify(events[j])
-    //   );
-    // }
+    events.unshift({ date: clickedDay, eventTitle: eventInput.value });
+    localStorage.setItem("events", JSON.stringify(events));
+    eventInput.value = "";
+    hideAddEvent();
+    // getCalendar();
   } else {
     eventInput.classList.add("error");
   }
@@ -149,37 +150,48 @@ const addCancelEvent = () => {
   document
     .querySelector(".cancel_event_btn")
     .addEventListener("click", hideAddEvent);
-    hideAddEvent();
-
 };
 
 /*** DISPLAY LIST OF EVENTS ***/
 const displayAllEvents = () => {
-    let eventsList = document.querySelector(".events__list");
-    console.log({events : events.length})
-  
-    for (let i = events.length-1; i >=0; i--) {
-      let eventItem = document.createElement("li");
-      let eventItemLeft = document.createElement("div");
-      let eventName = document.createElement("span");
-      let eventDate = document.createElement("span");
-  
-      eventItem.classList.add("events__item");
-      eventItemLeft.classList.add("events__item--left");
-      eventName.classList.add("events__name");
-      eventDate.classList.add("events__date");
-  
-      eventName.innerText = events[i].eventTitle;
-      eventDate.innerText = events[i].date;
-  
-      eventItemLeft.appendChild(eventDate);
-      eventItemLeft.appendChild(eventName);
-      eventItem.appendChild(eventItemLeft);
-      eventsList.appendChild(eventItem);
-    }
-  };
+  let eventsList = document.querySelector(".events__list");
+  for (let i = 0; i < events.length; i++) {
+    // console.log(monthNb + 1 == events[i].date.split("/")[0])
+
+    let eventItem = document.createElement("li");
+    let eventItemLeft = document.createElement("div");
+    let eventName = document.createElement("span");
+    let eventDate = document.createElement("span");
+    let deleteEventBtn = document.createElement("img");
+    deleteEventBtn.setAttribute("src", "../images/delete-btn3.png");
+
+    eventItem.classList.add("events__item");
+    eventItemLeft.classList.add("events__item--left");
+    eventName.classList.add("events__name");
+    eventDate.classList.add("events__date");
+    deleteEventBtn.classList.add("fa-solid");
+    deleteEventBtn.classList.add("delete_btn");
+
+    eventName.innerText = events[i].eventTitle;
+    eventDate.innerText = events[i].date;
+
+    deleteEventBtn.addEventListener("click", deleteEvent);
+
+    eventItemLeft.appendChild(eventDate);
+    eventItemLeft.appendChild(eventName);
+    eventItem.appendChild(eventItemLeft);
+    // eventItem.appendChild(deleteEventBtn);
+    eventsList.appendChild(eventItem);
+  }
+};
+
+/****** DELETE EVENT ***********/
+const deleteEvent = () => {
+  events = events.filter((event) => event.date != clickedDay);
+  localStorage.setItem("events", JSON.stringify(events));
+};
 
 prevNextButtons();
+displayAllEvents();
 addCancelEvent();
 getCalendar();
-
