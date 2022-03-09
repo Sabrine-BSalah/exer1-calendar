@@ -91,15 +91,12 @@ const prevNextButtons = () => {
 
 /***************************** EVENTS ***************************************/
 let clickedDay = null;
-let events = localStorage.getItem("events")
-  ? JSON.parse(localStorage.getItem("events"))
-  : [];
+// check if events is not empty else return emty array ( you don't need undefined)
+let events = []
+
 let eventInput = document.querySelector(".event_input");
 let errorMsg = document.querySelector(".error_msg");
-// check if events is not empty else return emty array ( you don't need undefined)
-// let events = localStorage.getItem("events")
-//   ? JSON.parse(localStorage.getItem("events"))
-//   : [];
+
 
 /*** HIDE ADD NEW EVENT BLOCK ***/
 const hideAddEvent = () => {
@@ -108,8 +105,7 @@ const hideAddEvent = () => {
   clickedDay = null;
   eventInput.classList.remove("error");
   errorMsg.innerText = "";
-  displayAllEvents();
-  // getCalendar();
+  getCalendar();
 };
 
 /*** DISPLAY ADD NEW EVENT BLOCK ***/
@@ -132,11 +128,11 @@ const displayAddEvent = (date) => {
 const addNewEvent = () => {
   if (eventInput.value) {
     eventInput.classList.remove("error");
-    events.unshift({ date: clickedDay, eventTitle: eventInput.value });
-    localStorage.setItem("events", JSON.stringify(events));
+    events=[]
+    events.push({ date: clickedDay, eventTitle: eventInput.value });
     eventInput.value = "";
+    displayAllEvents()
     hideAddEvent();
-    // getCalendar();
   } else {
     eventInput.classList.add("error");
   }
@@ -156,7 +152,6 @@ const addCancelEvent = () => {
 const displayAllEvents = () => {
   let eventsList = document.querySelector(".events__list");
   for (let i = 0; i < events.length; i++) {
-    // console.log(monthNb + 1 == events[i].date.split("/")[0])
 
     let eventItem = document.createElement("li");
     let eventItemLeft = document.createElement("div");
@@ -191,7 +186,7 @@ const deleteEvent = () => {
   localStorage.setItem("events", JSON.stringify(events));
 };
 
-prevNextButtons();
-displayAllEvents();
-addCancelEvent();
 getCalendar();
+prevNextButtons();
+addCancelEvent();
+displayAllEvents();
